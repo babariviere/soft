@@ -10,5 +10,10 @@ error_chain!{
         Io(::std::io::Error);
     }
 
-    errors {}
+    errors {
+        InvalidCommand(c: String) {
+            description("parsed command is invalid")
+            display("invalid command: {}", c)
+        }
+    }
 }

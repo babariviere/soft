@@ -7,6 +7,7 @@ pub enum Command {
     Get(String),
     Put(String),
     List(String),
+    Cwd,
     Exit,
 }
 
@@ -42,6 +43,7 @@ impl Command {
                 }
                 Ok(Command::List(splitted.next().unwrap().to_string()))
             }
+            "CWD" => Ok(Command::Cwd),
             "EXIT" => Ok(Command::Exit),
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
@@ -73,6 +75,7 @@ impl fmt::Display for Command {
             Command::Get(ref p) => write!(f, "GET {}", p),
             Command::Put(ref p) => write!(f, "PUT {}", p),
             Command::List(ref p) => write!(f, "LIST {}", p),
+            Command::Cwd => write!(f, "CWD"),
             Command::Exit => write!(f, "EXIT"),
         }
     }
@@ -92,6 +95,7 @@ mod tests {
                    Command::Put("/path".into()));
         assert_eq!(Command::try_from("LIST /path").unwrap(),
                    Command::List("/path".into()));
+        assert_eq!(Command::try_from("CWD").unwrap(), Command::Cwd);
         assert_eq!(Command::try_from("EXIT").unwrap(), Command::Exit);
         assert!(Command::try_from("LOGIN BLA").is_err());
         assert!(Command::try_from("GET hehe hehe").is_err());
@@ -107,6 +111,7 @@ mod tests {
         assert_eq!(Command::Get("/path".into()).to_string(), "GET /path");
         assert_eq!(Command::Put("/path".into()).to_string(), "PUT /path");
         assert_eq!(Command::List("/path".into()).to_string(), "LIST /path");
+        assert_eq!(Command::Cwd.to_string(), "CWD");
         assert_eq!(Command::Exit.to_string(), "EXIT");
     }
 

@@ -83,7 +83,7 @@ impl fmt::Display for Command {
 
 #[cfg(test)]
 mod tests {
-    use command::Command;
+    use super::Command;
 
     #[test]
     fn command_from_str() {

@@ -1,4 +1,5 @@
 use error::*;
+use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Command {
@@ -45,16 +46,34 @@ impl Command {
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
     }
+
+    /// Get login username and password
+    /// Only work for Login, else it will panic
+    pub fn unwrap_login(self) -> (String, String) {
+        match self {
+            Command::Login(u, p) => (u, p),
+            c => panic!("Command \'{}\' doesn't contain login information"),
+        }
+    }
+
+    /// Get the path from command,
+    /// Work for Get, Put and List, else it will panic
+    pub fn unwrap_path(self) -> String {
+        match self {
+            Command::Get(s) | Command::Put(s) | Command::List(s) => s,
+            c => panic!("Command \'{}\' doesn't contain path", c),
+        }
+    }
 }
 
-impl ToString for Command {
-    fn to_string(&self) -> String {
+impl fmt::Display for Command {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Command::Login(ref u, ref p) => format!("LOGIN {} {}", u, p),
-            Command::Get(ref p) => format!("GET {}", p),
-            Command::Put(ref p) => format!("PUT {}", p),
-            Command::List(ref p) => format!("LIST {}", p),
-            Command::Exit => "EXIT".to_string(),
+            Command::Login(ref u, ref p) => write!(f, "LOGIN {} {}", u, p),
+            Command::Get(ref p) => write!(f, "GET {}", p),
+            Command::Put(ref p) => write!(f, "PUT {}", p),
+            Command::List(ref p) => write!(f, "LIST {}", p),
+            Command::Exit => write!(f, "EXIT"),
         }
     }
 }
@@ -89,5 +108,30 @@ mod tests {
         assert_eq!(Command::Put("/path".into()).to_string(), "PUT /path");
         assert_eq!(Command::List("/path".into()).to_string(), "LIST /path");
         assert_eq!(Command::Exit.to_string(), "EXIT");
+    }
+
+    #[test]
+    fn command_unwrap_login() {
+        assert_eq!(Command::Login("user".into(), "pass".into()).unwrap_login(),
+                   ("user".into(), "pass".into()));
+    }
+
+    #[test]
+    #[should_panic]
+    fn command_unwrap_login_panic() {
+        let _ = Command::Exit.unwrap_login();
+    }
+
+    #[test]
+    fn command_unwrap_path() {
+        assert_eq!(Command::Get("/path".into()).unwrap_path(), "/path");
+        assert_eq!(Command::Put("/path".into()).unwrap_path(), "/path");
+        assert_eq!(Command::List("/path".into()).unwrap_path(), "/path");
+    }
+
+    #[test]
+    #[should_panic]
+    fn command_unwrap_path_panic() {
+        let _ = Command::Exit.unwrap_path();
     }
 }

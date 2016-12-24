@@ -54,7 +54,7 @@ impl Command {
     pub fn unwrap_login(self) -> (String, String) {
         match self {
             Command::Login(u, p) => (u, p),
-            c => panic!("Command \'{}\' doesn't contain login information"),
+            c => panic!("Command \'{}\' doesn't contain login information", c),
         }
     }
 

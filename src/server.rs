@@ -1,4 +1,5 @@
 use error::*;
+use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::marker::PhantomData;
 use types::Command;
@@ -21,6 +22,21 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         }
     }
 
+    /// Send file to client
+    pub fn send_file(&mut self, path: &str) -> Result<()> {
+        let mut file = fs::File::open(path)?;
+        let size = file.metadata()?.len();
+        self.stream.write(&u64_as_bytes(size))?;
+        let mut write_size = 0;
+        while write_size < size as usize {
+            let mut buf = [0; 100];
+            file.read(&mut buf)?;
+            let writed = self.stream.write(&buf)?;
+            write_size += writed;
+        }
+        Ok(())
+    }
+
     /// Read command sended by client
     pub fn read_command(&'a mut self) -> Result<Command> {
         let mut buf = String::new();
@@ -28,4 +44,18 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         bufreader.read_line(&mut buf)?;
         Command::try_from(buf)
     }
+}
+
+/// Convert an u64 to an array of u8
+fn u64_as_bytes<'a>(num: u64) -> [u8; 8] {
+    let mut arr = [0; 8];
+    arr[0] = (num >> 56) as u8;
+    arr[1] = ((num >> 48) - ((arr[0] as u64) << 8)) as u8;
+    arr[2] = ((num >> 40) - ((arr[1] as u64) << 8)) as u8;
+    arr[3] = ((num >> 32) - ((arr[2] as u64) << 8)) as u8;
+    arr[4] = ((num >> 24) - ((arr[3] as u64) << 8)) as u8;
+    arr[5] = ((num >> 16) - ((arr[4] as u64) << 8)) as u8;
+    arr[6] = ((num >> 8) - ((arr[5] as u64) << 8)) as u8;
+    arr[7] = (num - ((arr[6] as u64) << 8)) as u8;
+    arr
 }

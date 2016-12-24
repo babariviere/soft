@@ -30,8 +30,8 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         let mut write_size = 0;
         while write_size < size as usize {
             let mut buf = [0; 100];
-            file.read(&mut buf)?;
-            let writed = self.stream.write(&buf)?;
+            let readed = file.read(&mut buf)?;
+            let writed = self.stream.write(&buf[0..readed])?;
             write_size += writed;
         }
         Ok(())

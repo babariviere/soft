@@ -6,24 +6,46 @@ pub mod error;
 pub mod server;
 pub mod types;
 
-pub const DEFAULT_PORT: u32 = 9045;
+pub const DEFAULT_PORT: u16 = 9045;
 
 #[cfg(test)]
 mod tests {
     use client::SoftClient;
     use server::SoftServer;
-    use std::fs::OpenOptions;
+    use std::fs;
+    use std::net;
+    use std::thread;
     use types::*;
 
     #[test]
     fn file_stream() {
-        let server_stream =
-            OpenOptions::new().read(true).write(true).create(true).open(".file_stream").unwrap();
-        let client_stream = OpenOptions::new().read(true).write(true).open(".file_stream").unwrap();
+        let server_stream = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(".file_stream")
+            .unwrap();
+        let client_stream =
+            fs::OpenOptions::new().read(true).write(true).open(".file_stream").unwrap();
         let mut server = SoftServer::new(server_stream);
         let mut client = SoftClient::new(client_stream);
         client.write_command(Command::Exit).unwrap();
         assert_eq!(server.read_command().unwrap(), Command::Exit);
-        ::std::fs::remove_file(".file_stream").unwrap();
+        fs::remove_file(".file_stream").unwrap();
+    }
+
+    #[test]
+    fn tcp_stream() {
+        let server_stream = net::TcpListener::bind(("0.0.0.0", super::DEFAULT_PORT)).unwrap();
+        let addr = server_stream.local_addr().unwrap();
+        let server_thread = thread::spawn(move || {
+            let (client, _) = server_stream.accept().unwrap();
+            let mut server = SoftServer::new(client);
+            assert_eq!(server.read_command().unwrap(), Command::Exit);
+        });
+        let client_stream = net::TcpStream::connect(addr).unwrap();
+        let mut client = SoftClient::new(client_stream);
+        client.write_command(Command::Exit).unwrap();
+        server_thread.join().unwrap();
     }
 }

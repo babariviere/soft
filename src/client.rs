@@ -1,14 +1,10 @@
 use error::*;
-use std::net::{TcpStream, ToSocketAddrs};
+use std::io::{Read, Write};
 
-pub struct SoftClient {
-    // TODO add multiple stream support
-    stream: TcpStream,
-}
+pub struct SoftClient<S: Read + Write>(S);
 
-impl SoftClient {
-    pub fn connect<A: ToSocketAddrs>(addr: A) -> Result<SoftClient> {
-        let stream = TcpStream::connect(addr)?;
-        Ok(SoftClient { stream: stream })
+impl<S: Read + Write> SoftClient<S> {
+    pub fn new(stream: S) -> SoftClient<S> {
+        SoftClient(stream)
     }
 }

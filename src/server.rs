@@ -1,13 +1,10 @@
 use error::*;
-use std::net::{TcpListener, ToSocketAddrs};
+use std::io::{Read, Write};
 
-pub struct SoftServer {
-    listener: TcpListener,
-}
+pub struct SoftServer<S: Read + Write>(S);
 
-impl SoftServer {
-    pub fn bind<A: ToSocketAddrs>(addr: A) -> Result<SoftServer> {
-        let listener = TcpListener::bind(addr)?;
-        Ok(SoftServer { listener: listener })
+impl<S: Read + Write> SoftServer<S> {
+    pub fn new(stream: S) -> SoftServer<S> {
+        SoftServer(stream)
     }
 }

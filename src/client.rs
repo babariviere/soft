@@ -38,7 +38,9 @@ impl<S: Read + Write> SoftClient<S> {
         let mut buf = [0; 8];
         self.stream.read(&mut buf)?;
         let mut size: u64 = 0;
-        let _ = buf.iter().map(|x| size += *x as u64);
+        for x in buf.iter() {
+            size += *x as u64;
+        }
         Ok(size)
     }
 

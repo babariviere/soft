@@ -13,6 +13,7 @@ mod tests {
     use client::SoftClient;
     use server::SoftServer;
     use std::fs;
+    use std::io::Write;
     use std::net;
     use std::thread;
     use types::*;
@@ -46,6 +47,23 @@ mod tests {
         let client_stream = net::TcpStream::connect(addr).unwrap();
         let mut client = SoftClient::new(client_stream);
         client.write_command(Command::Exit).unwrap();
+        server_thread.join().unwrap();
+    }
+
+    #[test]
+    fn file_transfert() {
+        let server_stream = net::TcpListener::bind(("0.0.0.0", super::DEFAULT_PORT + 1)).unwrap();
+        let addr = server_stream.local_addr().unwrap();
+        let server_thread = thread::spawn(move || {
+            let (client, _) = server_stream.accept().unwrap();
+            let mut server = SoftServer::new(client);
+            // FIXME
+            server.read_command().unwrap();
+            server.send_file("Cargo.toml").unwrap();
+        });
+        let client_stream = net::TcpStream::connect(addr).unwrap();
+        let mut client = SoftClient::new(client_stream);
+        let _data = client.get("Cargo.toml").unwrap();
         server_thread.join().unwrap();
     }
 }

@@ -1,6 +1,6 @@
 use error::*;
 use std::fs;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{Read, Write};
 use std::marker::PhantomData;
 use types::Command;
 
@@ -38,11 +38,22 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
     }
 
     /// Read command sended by client
-    pub fn read_command(&'a mut self) -> Result<Command> {
+    pub fn read_command(&mut self) -> Result<Command> {
         let mut buf = String::new();
-        let mut bufreader = BufReader::new(&self.stream);
-        bufreader.read_line(&mut buf)?;
+        read_line(&mut self.stream, &mut buf)?;
         Command::try_from(buf)
+    }
+}
+
+fn read_line<R: Read>(stream: &mut R, buf: &mut String) -> Result<()> {
+    let mut b = [0];
+    loop {
+        stream.read(&mut b)?;
+        let c = b[0] as char;
+        buf.push(c);
+        if c == '\n' {
+            return Ok(());
+        }
     }
 }
 

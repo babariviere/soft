@@ -13,6 +13,7 @@ pub struct SoftServer<'a, S: Read + Write + 'a>
 impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
     where &'a S: Read
 {
+    /// Initialize a new server from stream
     pub fn new(stream: S) -> SoftServer<'a, S> {
         SoftServer {
             stream: stream,
@@ -20,6 +21,7 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         }
     }
 
+    /// Read command sended by client
     pub fn read_command(&'a mut self) -> Result<Command> {
         let mut buf = String::new();
         let mut bufreader = BufReader::new(&self.stream);

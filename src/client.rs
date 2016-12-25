@@ -17,9 +17,24 @@ impl<S: Read + Write> SoftClient<S> {
         unimplemented!()
     }
 
-    /// Get file from soft server
+    /// Ask and get file from soft server
     pub fn get(&mut self, path: &str) -> Result<Vec<u8>> {
         self.write_command(Command::Get(path.into()))?;
+        self.get_file()
+    }
+
+    // Low level functions
+
+    /// Send a command to server
+    /// Warning: this is a low level function
+    pub fn write_command(&mut self, command: Command) -> Result<()> {
+        self.stream.write(format!("{}\n", command).as_bytes())?;
+        Ok(())
+    }
+
+    /// Receive file from soft server
+    /// Warning: this is a low level function
+    pub fn get_file(&mut self) -> Result<Vec<u8>> {
         let size = self.read_file_size()? as usize;
         let mut data = Vec::with_capacity(size);
         let mut buf = [0; 100];
@@ -42,11 +57,5 @@ impl<S: Read + Write> SoftClient<S> {
             size += *x as u64;
         }
         Ok(size)
-    }
-
-    /// Send a command to server
-    pub fn write_command(&mut self, command: Command) -> Result<()> {
-        self.stream.write(format!("{}\n", command).as_bytes())?;
-        Ok(())
     }
 }

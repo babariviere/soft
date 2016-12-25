@@ -70,15 +70,12 @@ fn file_transfert_file_stream() {
         fs::OpenOptions::new().read(true).write(true).open(".file_streamt").unwrap();
     let mut server = SoftServer::new(server_stream);
     let mut client = SoftClient::new(client_stream);
-    // TODO make a function that doesn't call write_command for client
-    // let data = client.get(FILE_NAME).unwrap();
-    // let server_thread = thread::spawn(move || {
-    //    server.read_command().unwrap();
-    //    server.send_file(FILE_NAME).unwrap();
-    // );
+    client.write_command(Command::Get(FILE_NAME.into())).unwrap();
+    server.read_command().unwrap();
+    server.send_file(FILE_NAME).unwrap();
+    let data = client.get_file().unwrap();
     fs::remove_file(".file_streamt").unwrap();
-    // assert_eq!(data, FILE_DATA.as_bytes());
-    // server_thread.join().unwrap();
+    assert_eq!(data, FILE_DATA.as_bytes());
 }
 
 #[test]

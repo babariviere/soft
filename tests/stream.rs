@@ -73,7 +73,7 @@ fn file_transfert_file_stream() {
     client.write_command(Command::Get(FILE_NAME.into())).unwrap();
     server.read_command().unwrap();
     server.send_file(FILE_NAME).unwrap();
-    let data = client.get_file().unwrap();
+    let data = client.recv_file().unwrap();
     fs::remove_file(".file_streamt").unwrap();
     assert_eq!(data, FILE_DATA.as_bytes());
 }

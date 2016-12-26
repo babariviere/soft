@@ -80,3 +80,19 @@ impl fmt::Display for Command {
         }
     }
 }
+
+pub enum Status {
+    Connected = 1,
+    WrongLogin = 2,
+    UnkownError = 255,
+}
+
+impl From<u8> for Status {
+    fn from(from: u8) -> Status {
+        match from {
+            1 => Status::Connected,
+            2 => Status::WrongLogin,
+            _ => Status::UnkownError,
+        }
+    }
+}

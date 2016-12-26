@@ -83,6 +83,27 @@ fn file_transfert_file_stream() {
 }
 
 #[test]
+fn login() {
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 3)).unwrap();
+    let addr = server_stream.local_addr().unwrap();
+    let server_thread = thread::spawn(move || {
+        let (client, _) = server_stream.accept().unwrap();
+        let mut server = SoftServer::new(client);
+        let command = server.read_command().unwrap();
+        let (user, pass) = command.unwrap_login();
+        if user == "test" && pass == "test_pass" {
+            server.write_status(Status::Connected).unwrap();
+        } else {
+            server.write_status(Status::WrongLogin).unwrap();
+        }
+    });
+    let client_stream = net::TcpStream::connect(addr).unwrap();
+    let mut client = SoftClient::new(client_stream);
+    client.login("test", "test_pass").unwrap();
+    server_thread.join().unwrap();
+}
+
+#[test]
 #[should_panic]
 fn file_transfert_fail() {
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 2)).unwrap();

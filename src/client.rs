@@ -1,6 +1,6 @@
 use error::*;
 use std::io::{Read, Write};
-use types::Command;
+use types::*;
 
 pub struct SoftClient<S: Read + Write> {
     stream: S,
@@ -12,9 +12,10 @@ impl<S: Read + Write> SoftClient<S> {
         SoftClient { stream: stream }
     }
 
-    /// Connect to soft server
-    pub fn connect(&mut self, _user: &str, _pass: &str) -> Result<()> {
-        unimplemented!()
+    /// Login to soft server
+    pub fn login(&mut self, user: &str, pass: &str) -> Result<Status> {
+        self.write_command(Command::Login(user.into(), pass.into()))?;
+        self.read_status()
     }
 
     /// Ask and get file from soft server
@@ -36,6 +37,14 @@ impl<S: Read + Write> SoftClient<S> {
     pub fn write_command(&mut self, command: Command) -> Result<()> {
         self.stream.write(format!("{}\n", command).as_bytes())?;
         Ok(())
+    }
+
+    /// Receive status from server
+    /// Warning: this is a low level function
+    pub fn read_status(&mut self) -> Result<Status> {
+        let mut buf = [0];
+        self.stream.read(&mut buf)?;
+        Ok(Status::from(buf[0]))
     }
 
     /// Receive file from soft server

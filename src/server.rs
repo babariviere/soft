@@ -1,7 +1,7 @@
 use error::*;
 use std::io::{Read, Write};
 use std::marker::PhantomData;
-use types::Command;
+use types::*;
 
 pub struct SoftServer<'a, S: Read + Write + 'a>
     where &'a S: Read
@@ -36,5 +36,12 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         let mut buf = String::new();
         ::common::read_line(&mut self.stream, &mut buf)?;
         Command::try_from(buf)
+    }
+
+    /// Write status to client
+    pub fn write_status(&mut self, status: Status) -> Result<()> {
+        let status = status as u8;
+        self.stream.write(&[status])?;
+        Ok(())
     }
 }

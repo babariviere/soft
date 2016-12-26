@@ -36,6 +36,12 @@ impl<S: Read + Write> SoftClient<S> {
         self.recv_list_file()
     }
 
+    /// Send to server an exit command
+    pub fn exit(&mut self) -> Result<Status> {
+        self.write_command(Command::Exit)?;
+        self.read_status()
+    }
+
     // Low level functions
 
     /// Send a command to server

@@ -83,7 +83,8 @@ impl fmt::Display for Command {
 
 pub enum Status {
     Connected = 1,
-    WrongLogin = 2,
+    Disconnected = 2,
+    WrongLogin = 3,
     UnkownError = 255,
 }
 
@@ -91,7 +92,8 @@ impl From<u8> for Status {
     fn from(from: u8) -> Status {
         match from {
             1 => Status::Connected,
-            2 => Status::WrongLogin,
+            2 => Status::Disconnected,
+            3 => Status::WrongLogin,
             _ => Status::UnkownError,
         }
     }

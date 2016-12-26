@@ -1,24 +1,15 @@
 use error::*;
 use std::io::{Read, Write};
-use std::marker::PhantomData;
 use types::*;
 
-pub struct SoftServer<'a, S: Read + Write + 'a>
-    where &'a S: Read
-{
+pub struct SoftServer<S: Read + Write> {
     stream: S,
-    _marker: PhantomData<&'a ()>,
 }
 
-impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
-    where &'a S: Read
-{
+impl<S: Read + Write> SoftServer<S> {
     /// Initialize a new server from stream
-    pub fn new(stream: S) -> SoftServer<'a, S> {
-        SoftServer {
-            stream: stream,
-            _marker: PhantomData,
-        }
+    pub fn new(stream: S) -> SoftServer<S> {
+        SoftServer { stream: stream }
     }
 
     /// Receive file from client

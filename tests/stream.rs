@@ -104,6 +104,23 @@ fn login() {
 }
 
 #[test]
+fn list_files() {
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 4)).unwrap();
+    let addr = server_stream.local_addr().unwrap();
+    let server_thread = thread::spawn(move || {
+        let (client, _) = server_stream.accept().unwrap();
+        let mut server = SoftServer::new(client);
+        let command = server.read_command().unwrap();
+        let path = command.unwrap_path();
+        server.send_list_file(&path).unwrap();
+    });
+    let client_stream = net::TcpStream::connect(addr).unwrap();
+    let mut client = SoftClient::new(client_stream);
+    let _list = client.list(".//////./////").unwrap();
+    server_thread.join().unwrap();
+}
+
+#[test]
 #[should_panic]
 fn file_transfert_fail() {
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 2)).unwrap();

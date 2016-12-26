@@ -31,6 +31,11 @@ impl<'a, S: Read + Write + 'a> SoftServer<'a, S>
         ::common::send_file(&mut self.stream, path)
     }
 
+    /// Send list of file
+    pub fn send_list_file(&mut self, path: &str) -> Result<()> {
+        ::common::send_list_file(&mut self.stream, path)
+    }
+
     /// Read command sended by client
     pub fn read_command(&mut self) -> Result<Command> {
         let mut buf = String::new();

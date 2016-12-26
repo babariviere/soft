@@ -1,10 +1,11 @@
 use error::*;
 use std::fs;
 use std::io::{Read, Write};
+use std::path::Path;
 
 /// Receive file from stream
 pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
-    let size = read_file_size(stream)? as usize;
+    let size = read_size(stream)? as usize;
     let mut data = Vec::with_capacity(size);
     let mut buf = [0; 100];
     let mut read_size = 0;
@@ -14,6 +15,18 @@ pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
         data.extend_from_slice(&buf[0..readed]);
     }
     Ok(data)
+}
+
+/// Receive list of files from stream
+pub fn recv_list_file<R: Read>(stream: &mut R) -> Result<Vec<String>> {
+    let size = read_size(stream)?;
+    let mut list = Vec::new();
+    for _ in 0..size {
+        let mut buf = String::new();
+        read_line(stream, &mut buf)?;
+        list.push(buf);
+    }
+    Ok(list)
 }
 
 /// Send file to stream
@@ -31,8 +44,50 @@ pub fn send_file<W: Write>(stream: &mut W, path: &str) -> Result<()> {
     Ok(())
 }
 
-/// Receive size of file that will be sent
-fn read_file_size<R: Read>(stream: &mut R) -> Result<u64> {
+/// Send list of files to stream
+pub fn send_list_file<W: Write>(stream: &mut W, path_name: &str) -> Result<()> {
+    let mut list = Vec::new();
+    let path = Path::new(path_name);
+    let path_name = beautify_path(path_name);
+    if path.is_dir() {
+        for entry in path.read_dir()? {
+            let entry = entry?;
+            let file_name = entry.file_name();
+            let file_name = file_name.to_str().unwrap();
+            list.push(format!("{}/{}", path_name, file_name));
+        }
+    } else {
+        list.push(path_name);
+    }
+    stream.write(&u64_as_bytes(list.len() as u64))?;
+    for file in list {
+        let to_send = format!("{}\n", file);
+        stream.write(to_send.as_bytes())?;
+    }
+    Ok(())
+}
+
+/// Remove slash in double and remove slash at ends
+fn beautify_path(path: &str) -> String {
+    let path = path.to_owned();
+    let mut new_path = String::new();
+    let mut last_char = ' ';
+    for c in path.chars() {
+        if last_char == '/' && c == '/' {
+            continue;
+        }
+        new_path.push(c);
+        last_char = c;
+    }
+    if new_path.ends_with('/') {
+        new_path.pop();
+    }
+    let new_path = new_path.replace("./", "");
+    new_path
+}
+
+/// Receive size of file or else that will be sent
+fn read_size<R: Read>(stream: &mut R) -> Result<u64> {
     let mut buf = [0; 8];
     stream.read(&mut buf)?;
     let mut size: u64 = 0;
@@ -48,10 +103,10 @@ pub fn read_line<R: Read>(stream: &mut R, buf: &mut String) -> Result<()> {
     loop {
         stream.read(&mut b)?;
         let c = b[0] as char;
-        buf.push(c);
         if c == '\n' {
             return Ok(());
         }
+        buf.push(c);
     }
 }
 

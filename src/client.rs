@@ -30,6 +30,12 @@ impl<S: Read + Write> SoftClient<S> {
         self.send_file(local_path)
     }
 
+    /// Ask and list file from soft server
+    pub fn list(&mut self, path: &str) -> Result<Vec<String>> {
+        self.write_command(Command::List(path.into()))?;
+        self.recv_list_file()
+    }
+
     // Low level functions
 
     /// Send a command to server
@@ -51,6 +57,12 @@ impl<S: Read + Write> SoftClient<S> {
     /// Warning: this is a low level function
     pub fn recv_file(&mut self) -> Result<Vec<u8>> {
         ::common::recv_file(&mut self.stream)
+    }
+
+    /// Receive list of file from soft server
+    /// Warning: this is a low level function
+    pub fn recv_list_file(&mut self) -> Result<Vec<String>> {
+        ::common::recv_list_file(&mut self.stream)
     }
 
     /// Send file to soft server

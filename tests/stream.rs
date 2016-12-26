@@ -50,11 +50,15 @@ fn file_transfert() {
         let mut server = SoftServer::new(client);
         server.read_command().unwrap();
         server.send_file(FILE_NAME).unwrap();
+        server.read_command().unwrap();
+        let data = server.recv_file().unwrap();
+        assert_eq!(data, FILE_DATA.as_bytes());
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
     let data = client.get(FILE_NAME).unwrap();
     assert_eq!(data, FILE_DATA.as_bytes());
+    client.put(FILE_NAME, "Cargo.t").unwrap();
     server_thread.join().unwrap();
 }
 
@@ -86,10 +90,12 @@ fn file_transfert_fail() {
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
         let mut server = SoftServer::new(client);
-        server.send_file("Cargo.toml").unwrap();
+        server.read_command().unwrap();
+        let data = server.recv_file().unwrap();
+        assert_eq!(data, FILE_DATA.as_bytes());
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
-    let _data = client.get("Cargo.toml").unwrap();
+    client.send_file(FILE_NAME).unwrap();
     server_thread.join().unwrap();
 }

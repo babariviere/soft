@@ -13,7 +13,6 @@ pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
         read_size += readed;
         data.extend_from_slice(&buf[0..readed]);
     }
-    stream.read(&mut buf)?;
     Ok(data)
 }
 

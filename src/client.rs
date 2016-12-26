@@ -23,6 +23,12 @@ impl<S: Read + Write> SoftClient<S> {
         self.recv_file()
     }
 
+    /// Ask and put file to soft server
+    pub fn put(&mut self, local_path: &str, remote_path: &str) -> Result<()> {
+        self.write_command(Command::Put(remote_path.into()))?;
+        self.send_file(local_path)
+    }
+
     // Low level functions
 
     /// Send a command to server

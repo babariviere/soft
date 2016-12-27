@@ -10,7 +10,12 @@ pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
     let mut buf = [0; 100];
     let mut read_size = 0;
     while read_size < size {
-        let readed = stream.read(&mut buf)?;
+        let to_read = size - read_size;
+        let readed = if to_read <= 100 {
+            stream.read(&mut buf[0..to_read])?
+        } else {
+            stream.read(&mut buf)?
+        };
         read_size += readed;
         data.extend_from_slice(&buf[0..readed]);
     }

@@ -85,6 +85,8 @@ pub enum Status {
     Connected = 1,
     Disconnected = 2,
     WrongLogin = 3,
+    NotConnected = 4,
+    Okay = 5,
     UnkownError = 255,
 }
 
@@ -94,6 +96,8 @@ impl From<u8> for Status {
             1 => Status::Connected,
             2 => Status::Disconnected,
             3 => Status::WrongLogin,
+            4 => Status::NotConnected,
+            5 => Status::Okay,
             _ => Status::UnkownError,
         }
     }

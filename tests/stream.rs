@@ -19,21 +19,21 @@ fn file_stream() {
         .open(".file_stream")
         .unwrap();
     let client_stream = fs::OpenOptions::new().read(true).write(true).open(".file_stream").unwrap();
-    let mut server = SoftServer::new(server_stream);
+    let mut server = SoftServer::new(None);
     let mut client = SoftClient::new(client_stream);
+    server.new_connection(server_stream);
     client.write_command(Command::Exit).unwrap();
-    assert_eq!(server.read_command().unwrap(), Command::Exit);
     fs::remove_file(".file_stream").unwrap();
 }
 
 #[test]
 fn tcp_stream() {
+    let mut server = SoftServer::new(None);
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
-        let mut server = SoftServer::new(client);
-        assert_eq!(server.read_command().unwrap(), Command::Exit);
+        server.new_connection(client);
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
@@ -43,97 +43,71 @@ fn tcp_stream() {
 
 #[test]
 fn file_transfert() {
+    let mut server = SoftServer::new(None);
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 1)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
-        let mut server = SoftServer::new(client);
-        server.read_command().unwrap();
-        server.send_file(FILE_NAME).unwrap();
-        server.read_command().unwrap();
-        let data = server.recv_file().unwrap();
-        assert_eq!(data, FILE_DATA.as_bytes());
+        server.new_connection(client);
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
     let data = client.get(FILE_NAME).unwrap();
     assert_eq!(data, FILE_DATA.as_bytes());
     client.put(FILE_NAME, "Cargo.t").unwrap();
+    client.exit().unwrap();
+    fs::remove_file("Cargo.t").unwrap();
     server_thread.join().unwrap();
 }
+// #[test]
+// fn login() {
+//     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 2)).unwrap();
+//     let addr = server_stream.local_addr().unwrap();
+//     let server_thread = thread::spawn(move || {
+//         let (client, _) = server_stream.accept().unwrap();
+//         let mut server = SoftServer::new(client);
+//         let command = server.read_command().unwrap();
+//         let (user, pass) = command.unwrap_login();
+//         if user == "test" && pass == "test_pass" {
+//             server.write_status(Status::Connected).unwrap();
+//         } else {
+//             server.write_status(Status::WrongLogin).unwrap();
+//         }
+//     });
+//     let client_stream = net::TcpStream::connect(addr).unwrap();
+//     let mut client = SoftClient::new(client_stream);
+//     client.login("test", "test_pass").unwrap();
+//     server_thread.join().unwrap();
+// }
 
 #[test]
-fn file_transfert_file_stream() {
-    let server_stream = fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .open(".file_streamt")
-        .unwrap();
-    let client_stream =
-        fs::OpenOptions::new().read(true).write(true).open(".file_streamt").unwrap();
-    let mut server = SoftServer::new(server_stream);
-    let mut client = SoftClient::new(client_stream);
-    client.write_command(Command::Get(FILE_NAME.into())).unwrap();
-    server.read_command().unwrap();
-    server.send_file(FILE_NAME).unwrap();
-    let data = client.recv_file().unwrap();
-    fs::remove_file(".file_streamt").unwrap();
-    assert_eq!(data, FILE_DATA.as_bytes());
-}
-
-#[test]
-fn login() {
+fn list_files() {
+    let mut server = SoftServer::new(None);
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 3)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
-        let mut server = SoftServer::new(client);
-        let command = server.read_command().unwrap();
-        let (user, pass) = command.unwrap_login();
-        if user == "test" && pass == "test_pass" {
-            server.write_status(Status::Connected).unwrap();
-        } else {
-            server.write_status(Status::WrongLogin).unwrap();
-        }
-    });
-    let client_stream = net::TcpStream::connect(addr).unwrap();
-    let mut client = SoftClient::new(client_stream);
-    client.login("test", "test_pass").unwrap();
-    server_thread.join().unwrap();
-}
-
-#[test]
-fn list_files() {
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 4)).unwrap();
-    let addr = server_stream.local_addr().unwrap();
-    let server_thread = thread::spawn(move || {
-        let (client, _) = server_stream.accept().unwrap();
-        let mut server = SoftServer::new(client);
-        let command = server.read_command().unwrap();
-        let path = command.unwrap_path();
-        server.send_list_file(&path).unwrap();
+        server.new_connection(client);
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
     let _list = client.list(".//////./////").unwrap();
+    client.exit().unwrap();
     server_thread.join().unwrap();
 }
 
 #[test]
-#[should_panic]
-fn file_transfert_fail() {
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 2)).unwrap();
+fn drop_exit() {
+    let mut server = SoftServer::new(None);
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 4)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
-        let mut server = SoftServer::new(client);
-        server.read_command().unwrap();
-        let data = server.recv_file().unwrap();
-        assert_eq!(data, FILE_DATA.as_bytes());
+        server.new_connection(client);
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
-    let mut client = SoftClient::new(client_stream);
-    client.send_file(FILE_NAME).unwrap();
+    {
+        let mut _client = SoftClient::new(client_stream);
+    }
     server_thread.join().unwrap();
 }

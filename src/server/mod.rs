@@ -1,43 +1,72 @@
-use error::*;
-use std::io::{Read, Write};
-use types::*;
+pub mod connection;
 
-pub struct SoftServer<S: Read + Write> {
-    stream: S,
+use self::connection::SoftConnection;
+use std::collections::HashMap;
+use std::io::{Read, Write};
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+
+pub struct SoftServer {
+    connection_handlers: Vec<mpsc::Receiver<u8>>,
+    users: Arc<HashMap<String, String>>,
+    max_threads: usize,
 }
 
-impl<S: Read + Write> SoftServer<S> {
+impl SoftServer {
     /// Initialize a new server from stream
-    pub fn new(stream: S) -> SoftServer<S> {
-        SoftServer { stream: stream }
+    pub fn new(max_threads: Option<usize>) -> SoftServer {
+        let mut max_threads = max_threads.unwrap_or(8);
+        if max_threads < 1 {
+            max_threads = 1;
+        }
+        SoftServer {
+            connection_handlers: Vec::new(),
+            users: Arc::new(HashMap::new()),
+            max_threads: max_threads,
+        }
     }
 
-    /// Receive file from client
-    pub fn recv_file(&mut self) -> Result<Vec<u8>> {
-        ::common::recv_file(&mut self.stream)
+    // TODO
+    pub fn load_db(&mut self, path: &str) {
+        unimplemented!()
     }
 
-    /// Send file to client
-    pub fn send_file(&mut self, path: &str) -> Result<()> {
-        ::common::send_file(&mut self.stream, path)
+    /// Add a new connection to server
+    pub fn new_connection<S: Read + Write + Send + 'static>(&mut self, stream: S) {
+        while self.connection_handlers.len() + 1 > self.max_threads {
+            self.check_connections();
+            thread::sleep(Duration::from_secs(5));
+        }
+        let (tx, rx) = mpsc::channel();
+        thread::spawn(move || {
+            let mut connection = SoftConnection::new(stream, tx);
+            match connection.run() {
+                Ok(_) => {
+                    // TODO log here
+                }
+                Err(_) => {
+                    // TODO log here
+                }
+            }
+        });
+        self.connection_handlers.push(rx);
     }
 
-    /// Send list of file
-    pub fn send_list_file(&mut self, path: &str) -> Result<()> {
-        ::common::send_list_file(&mut self.stream, path)
+    /// Check connections and remove those who are stopped
+    fn check_connections(&mut self) {
+        self.connection_handlers.retain(|c| {
+            let recv = c.try_recv();
+            recv.is_err()
+        });
     }
+}
 
-    /// Read command sended by client
-    pub fn read_command(&mut self) -> Result<Command> {
-        let mut buf = String::new();
-        ::common::read_line(&mut self.stream, &mut buf)?;
-        Command::try_from(buf)
-    }
-
-    /// Write status to client
-    pub fn write_status(&mut self, status: Status) -> Result<()> {
-        let status = status as u8;
-        self.stream.write(&[status])?;
-        Ok(())
+impl Drop for SoftServer {
+    fn drop(&mut self) {
+        for connection in self.connection_handlers.iter() {
+            connection.recv();
+        }
     }
 }

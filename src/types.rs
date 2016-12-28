@@ -90,6 +90,19 @@ pub enum Status {
     UnkownError = 255,
 }
 
+impl Status {
+    pub fn is_positive(&self) -> bool {
+        match *self {
+            Status::Connected | Status::Disconnected | Status::Okay => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_negative(&self) -> bool {
+        !self.is_positive()
+    }
+}
+
 impl From<u8> for Status {
     fn from(from: u8) -> Status {
         match from {

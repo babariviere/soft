@@ -17,46 +17,50 @@ impl<S: Read + Write> SoftClient<S> {
     }
 
     /// Login to soft server
-    pub fn login(&mut self, user: &str, pass: &str) -> Result<Status> {
+    pub fn login(&mut self, user: &str, pass: &str) -> Result<()> {
         self.write_command(Command::Login(user.into(), pass.into()))?;
-        self.read_status()
+        self.check_status()
     }
 
     /// Ask and get file from soft server
     pub fn get(&mut self, path: &str) -> Result<Vec<u8>> {
         self.write_command(Command::Get(path.into()))?;
-        self.is_okay()?;
+        self.check_status()?;
         self.recv_file()
     }
 
     /// Ask and put file to soft server
     pub fn put(&mut self, local_path: &str, remote_path: &str) -> Result<()> {
         self.write_command(Command::Put(remote_path.into()))?;
-        self.is_okay()?;
+        self.check_status()?;
         self.send_file(local_path)
     }
 
     /// Ask and list file from soft server
     pub fn list(&mut self, path: &str) -> Result<Vec<String>> {
         self.write_command(Command::List(path.into()))?;
-        self.is_okay()?;
+        self.check_status()?;
         self.recv_list_file()
     }
 
     /// Send to server an exit command
-    pub fn exit(&mut self) -> Result<Status> {
+    pub fn exit(&mut self) -> Result<()> {
         self.write_command(Command::Exit)?;
         self.exited = true;
-        self.read_status()
+        self.check_status()
     }
 
-    // TODO remove it and make is_positive for Status
-    fn is_okay(&mut self) -> Result<()> {
-        match self.read_status()? {
-            Status::Okay => Ok(()),
-            Status::NotConnected => bail!(ErrorKind::NotConnected),
-            _ => unreachable!(),
+    /// Check sended status
+    fn check_status(&mut self) -> Result<()> {
+        let status = self.read_status()?;
+        if status.is_negative() {
+            match status {
+                Status::WrongLogin => bail!(ErrorKind::InvalidLogin),
+                Status::NotConnected => bail!(ErrorKind::NotConnected),
+                _ => {}
+            }
         }
+        Ok(())
     }
 
     // Low level functions

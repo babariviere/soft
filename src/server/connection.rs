@@ -1,22 +1,34 @@
+use APP_INFO;
+use app_dirs::{AppDataType, app_dir};
 use error::*;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::sync::mpsc;
+use std::sync::Arc;
+use super::users::Users;
 use types::*;
 
 pub struct SoftConnection<S: Read + Write> {
     root: Option<PathBuf>,
     stream: S,
     sender: mpsc::Sender<u8>,
+    users: Arc<Users>,
+    allow_anonymous: bool,
 }
 
 impl<S: Read + Write> SoftConnection<S> {
-    pub fn new(stream: S, sender: mpsc::Sender<u8>) -> SoftConnection<S> {
+    pub fn new(stream: S,
+               sender: mpsc::Sender<u8>,
+               users: Arc<Users>,
+               allow_anonymous: bool)
+               -> SoftConnection<S> {
         SoftConnection {
-            root: Some(PathBuf::from("/home/notkild/projects/rust/soft")), /* TODO set root when login */
+            root: None,
             stream: stream,
             sender: sender,
+            users: users,
+            allow_anonymous: allow_anonymous,
         }
     }
 
@@ -25,8 +37,14 @@ impl<S: Read + Write> SoftConnection<S> {
         loop {
             match self.read_command()? {
                 Command::Login(u, p) => {
-                    // TODO
+                    if !self.users.is_valid(&u, &p) {
+                        self.write_status(Status::WrongLogin)?;
+                        continue;
+                    }
                     self.write_status(Status::Connected)?;
+                    self.root = Some(app_dir(AppDataType::UserData,
+                                             &APP_INFO,
+                                             format!("users/{}", u).as_str())?);
                 }
                 Command::Get(p) => {
                     if self.root.is_none() {

@@ -87,8 +87,7 @@ fn beautify_path(path: &str) -> String {
     if new_path.ends_with('/') {
         new_path.pop();
     }
-    let new_path = new_path.replace("./", "");
-    new_path
+    new_path.replace("./", "")
 }
 
 /// Receive size of file or else that will be sent
@@ -96,7 +95,7 @@ fn read_size<R: Read>(stream: &mut R) -> Result<u64> {
     let mut buf = [0; 8];
     stream.read(&mut buf)?;
     let mut size: u64 = 0;
-    for x in buf.iter() {
+    for x in &buf {
         size += *x as u64;
     }
     Ok(size)
@@ -116,7 +115,7 @@ pub fn read_line<R: Read>(stream: &mut R, buf: &mut String) -> Result<()> {
 }
 
 /// Convert an u64 to an array of u8
-pub fn u64_as_bytes<'a>(num: u64) -> [u8; 8] {
+pub fn u64_as_bytes(num: u64) -> [u8; 8] {
     let mut arr = [0; 8];
     arr[0] = (num >> 56) as u8;
     arr[1] = ((num >> 48) - ((arr[0] as u64) << 8)) as u8;

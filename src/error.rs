@@ -8,6 +8,7 @@ error_chain!{
 
     foreign_links {
         Io(::std::io::Error);
+        AppDirs(::app_dirs::AppDirsError);
     }
 
     errors {
@@ -18,6 +19,10 @@ error_chain!{
         NotConnected {
             description("client is not logged in server")
             display("client is not logged in server")
+        }
+        InvalidUserDB {
+            description("provided user database is invalid")
+            display("provided user database is invalid")
         }
     }
 }

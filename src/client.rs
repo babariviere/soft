@@ -50,6 +50,7 @@ impl<S: Read + Write> SoftClient<S> {
         self.read_status()
     }
 
+    // TODO remove it and make is_positive for Status
     fn is_okay(&mut self) -> Result<()> {
         match self.read_status()? {
             Status::Okay => Ok(()),

@@ -1,7 +1,11 @@
-pub mod connection;
+mod connection;
+pub mod users;
 
+use APP_INFO;
+use app_dirs::{AppDataType, app_dir};
+use error::*;
 use self::connection::SoftConnection;
-use std::collections::HashMap;
+use self::users::Users;
 use std::io::{Read, Write};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -10,27 +14,25 @@ use std::time::Duration;
 
 pub struct SoftServer {
     connection_handlers: Vec<mpsc::Receiver<u8>>,
-    users: Arc<HashMap<String, String>>,
+    users: Arc<Users>,
     max_threads: usize,
 }
 
 impl SoftServer {
     /// Initialize a new server from stream
-    pub fn new(max_threads: Option<usize>) -> SoftServer {
+    pub fn new(name: &str, max_threads: Option<usize>) -> Result<SoftServer> {
         let mut max_threads = max_threads.unwrap_or(8);
         if max_threads < 1 {
             max_threads = 1;
         }
-        SoftServer {
+        let path = app_dir(AppDataType::UserData,
+                           &APP_INFO,
+                           format!("db/{}", name).as_str())?;
+        Ok(SoftServer {
             connection_handlers: Vec::new(),
-            users: Arc::new(HashMap::new()),
+            users: Arc::new(Users::load(path)?),
             max_threads: max_threads,
-        }
-    }
-
-    // TODO
-    pub fn load_db(&mut self, path: &str) {
-        unimplemented!()
+        })
     }
 
     /// Add a new connection to server
@@ -40,18 +42,19 @@ impl SoftServer {
             thread::sleep(Duration::from_secs(5));
         }
         let (tx, rx) = mpsc::channel();
+        let users = self.users.clone();
         thread::spawn(move || {
-            let mut connection = SoftConnection::new(stream, tx);
-            match connection.run() {
-                Ok(_) => {
-                    // TODO log here
-                }
-                Err(_) => {
-                    // TODO log here
-                }
+            // TODO handle anonymous
+            let mut connection = SoftConnection::new(stream, tx, users, false);
+            if connection.run().is_ok() {
+                // TODO log here
             }
         });
         self.connection_handlers.push(rx);
+    }
+
+    pub fn get_users(&self) -> Arc<Users> {
+        self.users.clone()
     }
 
     /// Check connections and remove those who are stopped
@@ -65,8 +68,8 @@ impl SoftServer {
 
 impl Drop for SoftServer {
     fn drop(&mut self) {
-        for connection in self.connection_handlers.iter() {
-            connection.recv();
+        for connection in &self.connection_handlers {
+            let _ = connection.recv();
         }
     }
 }

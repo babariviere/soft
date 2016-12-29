@@ -43,6 +43,19 @@ impl<S: Read + Write> SoftClient<S> {
         self.recv_list_file()
     }
 
+    /// Get the current working directory
+    pub fn cwd(&mut self) -> Result<String> {
+        self.write_command(Command::Cwd)?;
+        self.check_status()?;
+        self.read_line()
+    }
+
+    /// Change directory
+    pub fn cd(&mut self, path: &str) -> Result<()> {
+        self.write_command(Command::Cd(path.into()))?;
+        self.check_status()
+    }
+
     /// Send to server an exit command
     pub fn exit(&mut self) -> Result<()> {
         self.write_command(Command::Exit)?;
@@ -96,6 +109,13 @@ impl<S: Read + Write> SoftClient<S> {
     /// Warning: this is a low level function
     pub fn send_file(&mut self, path: &str) -> Result<()> {
         ::common::send_file(&mut self.stream, path)
+    }
+
+    /// Read a single line
+    pub fn read_line(&mut self) -> Result<String> {
+        let mut buf = String::new();
+        ::common::read_line(&mut self.stream, &mut buf)?;
+        Ok(buf)
     }
 }
 

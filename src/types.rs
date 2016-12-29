@@ -8,42 +8,46 @@ pub enum Command {
     Put(String),
     List(String),
     Cwd,
+    Cd(String),
     Exit,
 }
 
 impl Command {
     pub fn try_from<S: AsRef<str>>(s: S) -> Result<Command> {
         let s = s.as_ref().to_string();
-        let clone = s.clone();
-        let len = clone.split_whitespace().count();
-        let mut splitted = clone.split_whitespace();
-        match splitted.next().unwrap() {
+        let splitted = s.split_whitespace().map(|s| s.to_owned()).collect::<Vec<String>>();
+        match splitted[0].as_str() {
             "LOGIN" => {
-                if len != 3 {
+                if splitted.len() != 3 {
                     bail!(ErrorKind::InvalidCommand(s));
                 }
-                Ok(Command::Login(splitted.next().unwrap().to_string(),
-                                  splitted.next().unwrap().to_string()))
+                Ok(Command::Login(splitted[1].clone(), splitted[2].clone()))
             }
             "GET" => {
-                if len != 2 {
+                if splitted.len() != 2 {
                     bail!(ErrorKind::InvalidCommand(s));
                 }
-                Ok(Command::Get(splitted.next().unwrap().to_string()))
+                Ok(Command::Get(splitted[1].clone()))
             }
             "PUT" => {
-                if len != 2 {
+                if splitted.len() != 2 {
                     bail!(ErrorKind::InvalidCommand(s));
                 }
-                Ok(Command::Put(splitted.next().unwrap().to_string()))
+                Ok(Command::Put(splitted[1].clone()))
             }
             "LIST" => {
-                if len != 2 {
+                if splitted.len() != 2 {
                     bail!(ErrorKind::InvalidCommand(s));
                 }
-                Ok(Command::List(splitted.next().unwrap().to_string()))
+                Ok(Command::List(splitted[1].clone()))
             }
             "CWD" => Ok(Command::Cwd),
+            "CD" => {
+                if splitted.len() != 2 {
+                    bail!(ErrorKind::InvalidCommand(s));
+                }
+                Ok(Command::Cd(splitted[1].clone()))
+            }
             "EXIT" => Ok(Command::Exit),
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
@@ -62,7 +66,7 @@ impl Command {
     /// Work for Get, Put and List, else it will panic
     pub fn unwrap_path(self) -> String {
         match self {
-            Command::Get(s) | Command::Put(s) | Command::List(s) => s,
+            Command::Get(s) | Command::Put(s) | Command::List(s) | Command::Cd(s) => s,
             c => panic!("Command \'{}\' doesn't contain path", c),
         }
     }
@@ -76,6 +80,7 @@ impl fmt::Display for Command {
             Command::Put(ref p) => write!(f, "PUT {}", p),
             Command::List(ref p) => write!(f, "LIST {}", p),
             Command::Cwd => write!(f, "CWD"),
+            Command::Cd(ref p) => write!(f, "CD {}", p),
             Command::Exit => write!(f, "EXIT"),
         }
     }

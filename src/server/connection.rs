@@ -11,6 +11,7 @@ use types::*;
 
 pub struct SoftConnection<S: Read + Write> {
     root: Option<PathBuf>,
+    cwd: String,
     stream: S,
     sender: mpsc::Sender<u8>,
     users: Arc<Users>,
@@ -25,6 +26,7 @@ impl<S: Read + Write> SoftConnection<S> {
                -> SoftConnection<S> {
         SoftConnection {
             root: None,
+            cwd: String::new(),
             stream: stream,
             sender: sender,
             users: users,
@@ -45,6 +47,7 @@ impl<S: Read + Write> SoftConnection<S> {
                     self.root = Some(app_dir(AppDataType::UserData,
                                              &APP_INFO,
                                              format!("users/{}", u).as_str())?);
+                    self.cwd = "/".to_string();
                 }
                 Command::Get(p) => {
                     if self.root.is_none() {
@@ -84,6 +87,7 @@ impl<S: Read + Write> SoftConnection<S> {
                     self.write_status(Status::Okay)?;
                     // TODO
                 }
+                Command::Cd(p) => unimplemented!(),
                 Command::Exit => {
                     self.write_status(Status::Disconnected)?;
                     break;

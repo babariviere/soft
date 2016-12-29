@@ -1,0 +1,9 @@
+[package]
+name = "soft-cli"
+version = "0.1.0"
+authors = ["notkild <notkild@gmail.com>"]
+
+[dependencies]
+
+[dependencies.soft]
+path = "../"

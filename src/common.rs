@@ -111,6 +111,7 @@ pub fn read_line<R: Read>(stream: &mut R, buf: &mut String) -> Result<()> {
             return Ok(());
         }
         buf.push(c);
+        ::std::thread::sleep(::std::time::Duration::from_millis(50));
     }
 }
 

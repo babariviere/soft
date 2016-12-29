@@ -85,7 +85,7 @@ impl<S: Read + Write> SoftConnection<S> {
                         continue;
                     }
                     self.write_status(Status::Okay)?;
-                    // TODO
+                    self.stream.write(format!("{}\n", self.cwd).as_bytes())?;
                 }
                 Command::Cd(p) => unimplemented!(),
                 Command::Exit => {

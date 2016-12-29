@@ -36,6 +36,9 @@ fn main() {
                     }
                 }
             }
+            "cwd" => {
+                println!("{}", client.cwd().unwrap());
+            }
             "exit" => {
                 client.exit().unwrap();
                 break;

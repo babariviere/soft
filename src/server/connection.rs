@@ -62,9 +62,12 @@ impl<S: Read + Write> SoftConnection<S> {
                         self.write_status(Status::NotConnected)?;
                         continue;
                     }
+                    // FIXME new file
                     self.write_status(Status::Okay)?;
-                    let root = self.root.clone().unwrap();
-                    let path = root.join(p);
+                    let path_str = format!("{}/{}",
+                                           self.root.clone().unwrap().display(),
+                                           self.to_server_path(&p));
+                    let path = PathBuf::from(path_str);
                     let data = self.recv_file()?;
                     let mut file = File::create(&path)?;
                     file.write(data.as_slice())?;
@@ -152,7 +155,8 @@ impl<S: Read + Write> SoftConnection<S> {
         let root = self.root.clone().unwrap();
         let root_str = root.display().to_string();
         let mut path_str = if path.starts_with("/") {
-            let p = root.join(path);
+            let path_str = format!("{}/{}", root_str, path);
+            let p = PathBuf::from(path_str);
             let canonicalized = p.canonicalize().unwrap();
             canonicalized.display().to_string()
         } else {

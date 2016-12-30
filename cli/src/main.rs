@@ -36,6 +36,14 @@ fn main() {
                     }
                 }
             }
+            "listr" => {
+                if splitted.len() == 2 {
+                    let list = client.list_recursive(&splitted[1]).unwrap();
+                    for file in list {
+                        println!(" - {}", file);
+                    }
+                }
+            }
             "cwd" => {
                 println!("{}", client.cwd().unwrap());
             }

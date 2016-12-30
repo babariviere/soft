@@ -1,6 +1,7 @@
 use error::*;
 use std::fs;
 use std::io::{Read, Write};
+use std::mem;
 
 /// Receive file from stream
 pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
@@ -10,7 +11,7 @@ pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
     let mut read_size = 0;
     while read_size < size {
         let to_read = size - read_size;
-        let readed = if to_read <= 100 {
+        let readed = if to_read < 100 {
             stream.read(&mut buf[0..to_read])?
         } else {
             stream.read(&mut buf)?
@@ -80,10 +81,7 @@ pub fn beautify_path(path: &str) -> String {
 fn read_size<R: Read>(stream: &mut R) -> Result<u64> {
     let mut buf = [0; 8];
     stream.read(&mut buf)?;
-    let mut size: u64 = 0;
-    for x in &buf {
-        size += *x as u64;
-    }
+    let size: u64 = bytes_to_u64(buf);
     Ok(size)
 }
 
@@ -103,14 +101,10 @@ pub fn read_line<R: Read>(stream: &mut R, buf: &mut String) -> Result<()> {
 
 /// Convert an u64 to an array of u8
 pub fn u64_as_bytes(num: u64) -> [u8; 8] {
-    let mut arr = [0; 8];
-    arr[0] = (num >> 56) as u8;
-    arr[1] = ((num >> 48) - ((arr[0] as u64) << 8)) as u8;
-    arr[2] = ((num >> 40) - ((arr[1] as u64) << 8)) as u8;
-    arr[3] = ((num >> 32) - ((arr[2] as u64) << 8)) as u8;
-    arr[4] = ((num >> 24) - ((arr[3] as u64) << 8)) as u8;
-    arr[5] = ((num >> 16) - ((arr[4] as u64) << 8)) as u8;
-    arr[6] = ((num >> 8) - ((arr[5] as u64) << 8)) as u8;
-    arr[7] = (num - ((arr[6] as u64) << 8)) as u8;
-    arr
+    unsafe { mem::transmute::<u64, [u8; 8]>(num) }
+}
+
+/// Convert an array of u8 to u64
+pub fn bytes_to_u64(arr: [u8; 8]) -> u64 {
+    unsafe { mem::transmute::<[u8; 8], u64>(arr) }
 }

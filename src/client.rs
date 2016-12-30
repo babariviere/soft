@@ -43,6 +43,21 @@ impl<S: Read + Write> SoftClient<S> {
         self.recv_list_file()
     }
 
+    /// Ask and list file recursively from soft server
+    pub fn list_recursive(&mut self, path: &str) -> Result<Vec<String>> {
+        let mut list = self.list(path)?;
+        for file in list.clone() {
+            if file.ends_with('/') {
+                let sublist = self.list_recursive(&file)?;
+                for subfile in sublist {
+                    list.push(subfile);
+                }
+            }
+        }
+        list.sort();
+        Ok(list)
+    }
+
     /// Get the current working directory
     pub fn cwd(&mut self) -> Result<String> {
         self.write_command(Command::Cwd)?;

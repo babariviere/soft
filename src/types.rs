@@ -9,6 +9,7 @@ pub enum Command {
     List(String),
     Cwd,
     Cd(String),
+    Mkdir(String),
     Exit,
 }
 
@@ -48,6 +49,12 @@ impl Command {
                 }
                 Ok(Command::Cd(splitted[1].clone()))
             }
+            "MKDIR" => {
+                if splitted.len() != 2 {
+                    bail!(ErrorKind::InvalidCommand(s));
+                }
+                Ok(Command::Mkdir(splitted[1].clone()))
+            }
             "EXIT" => Ok(Command::Exit),
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
@@ -66,7 +73,11 @@ impl Command {
     /// Work for Get, Put and List, else it will panic
     pub fn unwrap_path(self) -> String {
         match self {
-            Command::Get(s) | Command::Put(s) | Command::List(s) | Command::Cd(s) => s,
+            Command::Get(s) |
+            Command::Put(s) |
+            Command::List(s) |
+            Command::Cd(s) |
+            Command::Mkdir(s) => s,
             c => panic!("Command \'{}\' doesn't contain path", c),
         }
     }
@@ -81,6 +92,7 @@ impl fmt::Display for Command {
             Command::List(ref p) => write!(f, "LIST {}", p),
             Command::Cwd => write!(f, "CWD"),
             Command::Cd(ref p) => write!(f, "CD {}", p),
+            Command::Mkdir(ref p) => write!(f, "MKDIR {}", p),
             Command::Exit => write!(f, "EXIT"),
         }
     }

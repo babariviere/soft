@@ -1,7 +1,7 @@
 use APP_INFO;
 use app_dirs::{AppDataType, app_dir};
 use error::*;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::sync::mpsc;
@@ -92,6 +92,18 @@ impl<S: Read + Write> SoftConnection<S> {
                         continue;
                     }
                     self.cwd = self.to_server_path(&p);
+                    self.write_status(Status::Okay)?;
+                }
+                Command::Mkdir(p) => {
+                    if self.root.is_none() {
+                        self.write_status(Status::NotConnected)?;
+                        continue;
+                    }
+                    let path = format!("{}/{}/{}",
+                                       self.root.clone().unwrap().display(),
+                                       self.cwd,
+                                       p);
+                    fs::create_dir_all(path)?;
                     self.write_status(Status::Okay)?;
                 }
                 Command::Exit => {

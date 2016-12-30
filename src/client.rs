@@ -56,6 +56,12 @@ impl<S: Read + Write> SoftClient<S> {
         self.check_status()
     }
 
+    /// Make directory
+    pub fn mkdir(&mut self, path: &str) -> Result<()> {
+        self.write_command(Command::Mkdir(path.into()))?;
+        self.check_status()
+    }
+
     /// Send to server an exit command
     pub fn exit(&mut self) -> Result<()> {
         self.write_command(Command::Exit)?;

@@ -1,7 +1,6 @@
 use error::*;
 use std::fs;
 use std::io::{Read, Write};
-use std::path::Path;
 
 /// Receive file from stream
 pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
@@ -50,20 +49,7 @@ pub fn send_file<W: Write>(stream: &mut W, path: &str) -> Result<()> {
 }
 
 /// Send list of files to stream
-pub fn send_list_file<W: Write>(stream: &mut W, path_name: &str) -> Result<()> {
-    let mut list = Vec::new();
-    let path = Path::new(path_name);
-    let path_name = beautify_path(path_name);
-    if path.is_dir() {
-        for entry in path.read_dir()? {
-            let entry = entry?;
-            let file_name = entry.file_name();
-            let file_name = file_name.to_str().unwrap();
-            list.push(format!("{}/{}", path_name, file_name));
-        }
-    } else {
-        list.push(path_name);
-    }
+pub fn send_list_file<W: Write>(stream: &mut W, list: Vec<String>) -> Result<()> {
     stream.write(&u64_as_bytes(list.len() as u64))?;
     for file in list {
         let to_send = format!("{}\n", file);
@@ -73,7 +59,7 @@ pub fn send_list_file<W: Write>(stream: &mut W, path_name: &str) -> Result<()> {
 }
 
 /// Remove slash in double and remove slash at ends
-fn beautify_path(path: &str) -> String {
+pub fn beautify_path(path: &str) -> String {
     let path = path.to_owned();
     let mut new_path = String::new();
     let mut last_char = ' ';

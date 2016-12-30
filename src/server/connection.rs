@@ -75,9 +75,8 @@ impl<S: Read + Write> SoftConnection<S> {
                         continue;
                     }
                     self.write_status(Status::Okay)?;
-                    let root = self.root.clone().unwrap();
-                    let path = root.join(p);
-                    self.send_list_file(&path.display().to_string())?;
+                    let path = self.validate_path(&p);
+                    self.send_list_file(&path)?;
                 }
                 Command::Cwd => {
                     if self.root.is_none() {
@@ -109,8 +108,9 @@ impl<S: Read + Write> SoftConnection<S> {
     }
 
     /// Send list of file
-    fn send_list_file(&mut self, path: &str) -> Result<()> {
-        ::common::send_list_file(&mut self.stream, path)
+    fn send_list_file(&mut self, local_path: &str) -> Result<()> {
+        let list = self.list_files(local_path)?;
+        ::common::send_list_file(&mut self.stream, list)
     }
 
     /// Read command sended by client
@@ -125,5 +125,52 @@ impl<S: Read + Write> SoftConnection<S> {
         let status = status as u8;
         self.stream.write(&[status])?;
         Ok(())
+    }
+
+    /// Return a valid path from root
+    fn validate_path(&self, path: &str) -> String {
+        // TODO return err
+        let root = self.root.clone().unwrap();
+        let root_str = root.display().to_string();
+        let mut path_str = if path.starts_with("/") {
+            let p = root.join(path);
+            let canonicalized = p.canonicalize().unwrap();
+            canonicalized.display().to_string()
+        } else {
+            let cwd_path = format!("{}/{}", root_str, self.cwd);
+            let p = PathBuf::from(cwd_path).join(path);
+            let canonicalized = p.canonicalize().unwrap();
+            canonicalized.display().to_string()
+        };
+        if path_str.contains(&root_str) {
+            path_str.drain(root_str.len()..).collect()
+        } else {
+            "/".to_string()
+        }
+    }
+
+    /// List files from root path
+    fn list_files(&self, local_path: &str) -> Result<Vec<String>> {
+        let root = self.root.clone().unwrap();
+        let root_str = ::common::beautify_path(&format!("{}/{}", root.display(), local_path));
+        let mut list = Vec::new();
+        let path = root.join(root_str);
+        let path_name = ::common::beautify_path(local_path);
+        println!("{}", path.display());
+        if path.is_dir() {
+            for entry in path.read_dir()? {
+                let entry = entry?;
+                let file_name = entry.file_name();
+                let file_name = file_name.to_str().unwrap();
+                if entry.path().is_dir() {
+                    list.push(::common::beautify_path(&format!("{}/{}/", local_path, file_name)));
+                } else {
+                    list.push(::common::beautify_path(&format!("{}/{}", local_path, file_name)));
+                }
+            }
+        } else {
+            list.push(path_name);
+        }
+        Ok(list)
     }
 }

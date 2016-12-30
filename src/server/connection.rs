@@ -166,19 +166,15 @@ impl<S: Read + Write> SoftConnection<S> {
 
     /// Return a valid path from server root
     fn to_server_path(&self, path: &str) -> String {
-        // TODO return err
         let root = self.root.clone().unwrap();
-        let root_str = root.display().to_string();
+        let root_str = ::common::beautify_path(&root.display().to_string());
+        let cwd = ::common::beautify_path(&self.cwd);
         let mut path_str = if path.starts_with("/") {
             let path_str = format!("{}/{}", root_str, path);
-            let p = PathBuf::from(path_str);
-            let canonicalized = p.canonicalize().unwrap();
-            canonicalized.display().to_string()
+            ::common::canonicalize(&path_str)
         } else {
-            let cwd_path = format!("{}/{}", root_str, self.cwd);
-            let p = PathBuf::from(cwd_path).join(path);
-            let canonicalized = p.canonicalize().unwrap();
-            canonicalized.display().to_string()
+            let path_str = format!("{}/{}/{}", root_str, cwd, path);
+            ::common::canonicalize(&path_str)
         };
         if path_str.contains(&root_str) {
             path_str.drain(root_str.len()..).collect()

@@ -77,6 +77,29 @@ pub fn beautify_path(path: &str) -> String {
     new_path.replace("./", "")
 }
 
+/// Return an absolute path of string
+pub fn canonicalize(path: &str) -> String {
+    let path = if path.starts_with('/') {
+        path.to_owned()
+    } else {
+        let cur = ::std::env::current_dir().unwrap().display().to_string();
+        format!("{}/{}", cur, path)
+    };
+    let path_tmp = path.split('/')
+        .filter(|p| *p != "." && !p.is_empty())
+        .map(|s| s.to_owned())
+        .collect::<Vec<String>>();
+    let mut path = Vec::new();
+    for i in 0..path_tmp.len() {
+        if path_tmp[i] == ".." {
+            path.pop();
+        } else {
+            path.push(path_tmp[i].clone());
+        }
+    }
+    path.iter().map(|s| format!("/{}", s)).collect::<String>()
+}
+
 /// Receive size of file or else that will be sent
 fn read_size<R: Read>(stream: &mut R) -> Result<u64> {
     let mut buf = [0; 8];

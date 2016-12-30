@@ -57,6 +57,16 @@ fn main() {
                     client.cd(&splitted[1]).unwrap();
                 }
             }
+            "rm" => {
+                if splitted.len() == 2 {
+                    client.rm(&splitted[1]).unwrap();
+                }
+            }
+            "rmdir" => {
+                if splitted.len() == 2 {
+                    client.rmdir(&splitted[1]).unwrap();
+                }
+            }
             "exit" => {
                 client.exit().unwrap();
                 break;

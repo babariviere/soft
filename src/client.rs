@@ -77,6 +77,18 @@ impl<S: Read + Write> SoftClient<S> {
         self.check_status()
     }
 
+    /// Remove a file
+    pub fn rm(&mut self, path: &str) -> Result<()> {
+        self.write_command(Command::Rm(path.into()))?;
+        self.check_status()
+    }
+
+    /// Remove a directory
+    pub fn rmdir(&mut self, path: &str) -> Result<()> {
+        self.write_command(Command::Rmdir(path.into()))?;
+        self.check_status()
+    }
+
     /// Send to server an exit command
     pub fn exit(&mut self) -> Result<()> {
         self.write_command(Command::Exit)?;

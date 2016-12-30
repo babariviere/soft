@@ -10,6 +10,8 @@ pub enum Command {
     Cwd,
     Cd(String),
     Mkdir(String),
+    Rm(String),
+    Rmdir(String),
     Exit,
 }
 
@@ -55,6 +57,18 @@ impl Command {
                 }
                 Ok(Command::Mkdir(splitted[1].clone()))
             }
+            "RM" => {
+                if splitted.len() != 2 {
+                    bail!(ErrorKind::InvalidCommand(s));
+                }
+                Ok(Command::Rm(splitted[1].clone()))
+            }
+            "RMDIR" => {
+                if splitted.len() != 2 {
+                    bail!(ErrorKind::InvalidCommand(s));
+                }
+                Ok(Command::Rmdir(splitted[1].clone()))
+            }
             "EXIT" => Ok(Command::Exit),
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
@@ -77,6 +91,8 @@ impl Command {
             Command::Put(s) |
             Command::List(s) |
             Command::Cd(s) |
+            Command::Rm(s) |
+            Command::Rmdir(s) |
             Command::Mkdir(s) => s,
             c => panic!("Command \'{}\' doesn't contain path", c),
         }
@@ -93,6 +109,8 @@ impl fmt::Display for Command {
             Command::Cwd => write!(f, "CWD"),
             Command::Cd(ref p) => write!(f, "CD {}", p),
             Command::Mkdir(ref p) => write!(f, "MKDIR {}", p),
+            Command::Rm(ref p) => write!(f, "RM {}", p),
+            Command::Rmdir(ref p) => write!(f, "RMDIR {}", p),
             Command::Exit => write!(f, "EXIT"),
         }
     }
@@ -104,6 +122,9 @@ pub enum Status {
     WrongLogin = 3,
     NotConnected = 4,
     Okay = 5,
+    NotFile = 6,
+    NotDir = 7,
+    PathUnknown = 8,
     UnkownError = 255,
 }
 
@@ -128,6 +149,9 @@ impl From<u8> for Status {
             3 => Status::WrongLogin,
             4 => Status::NotConnected,
             5 => Status::Okay,
+            6 => Status::NotFile,
+            7 => Status::NotDir,
+            8 => Status::PathUnknown,
             _ => Status::UnkownError,
         }
     }

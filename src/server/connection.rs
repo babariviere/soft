@@ -37,7 +37,18 @@ impl<S: Read + Write> SoftConnection<S> {
     /// TODO Check path
     pub fn run(&mut self) -> Result<()> {
         loop {
-            match self.read_command()? {
+            let command = self.read_command()?;
+            match command {
+                Command::Login(_, _) |
+                Command::Exit => {}
+                _ => {
+                    if self.root.is_none() {
+                        self.write_status(Status::NotConnected)?;
+                        continue;
+                    }
+                }
+            }
+            match command {
                 Command::Login(u, p) => {
                     if !self.users.is_valid(&u, &p) {
                         self.write_status(Status::WrongLogin)?;
@@ -50,18 +61,10 @@ impl<S: Read + Write> SoftConnection<S> {
                     self.cwd = "/".to_string();
                 }
                 Command::Get(p) => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     self.write_status(Status::Okay)?;
                     self.send_file(&p)?;
                 }
                 Command::Put(p) => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     // FIXME new file
                     self.write_status(Status::Okay)?;
                     let path_str = format!("{}/{}",
@@ -73,41 +76,53 @@ impl<S: Read + Write> SoftConnection<S> {
                     file.write(data.as_slice())?;
                 }
                 Command::List(p) => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     self.write_status(Status::Okay)?;
                     let path = self.to_server_path(&p);
                     self.send_list_file(&path)?;
                 }
                 Command::Cwd => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     self.write_status(Status::Okay)?;
                     self.stream.write(format!("{}\n", self.cwd).as_bytes())?;
                 }
                 Command::Cd(p) => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     self.cwd = self.to_server_path(&p);
                     self.write_status(Status::Okay)?;
                 }
                 Command::Mkdir(p) => {
-                    if self.root.is_none() {
-                        self.write_status(Status::NotConnected)?;
-                        continue;
-                    }
                     let path = format!("{}/{}/{}",
                                        self.root.clone().unwrap().display(),
                                        self.cwd,
                                        p);
                     fs::create_dir_all(path)?;
                     self.write_status(Status::Okay)?;
+                }
+                Command::Rm(p) => {
+                    let path_str = self.to_root_path(&p);
+                    let path = PathBuf::from(path_str);
+                    if !path.exists() {
+                        self.write_status(Status::PathUnknown)?;
+                        continue;
+                    }
+                    if path.is_file() {
+                        fs::remove_file(path)?;
+                        self.write_status(Status::Okay)?;
+                    } else {
+                        self.write_status(Status::NotFile)?;
+                    }
+                }
+                Command::Rmdir(p) => {
+                    let path_str = self.to_root_path(&p);
+                    let path = PathBuf::from(path_str);
+                    if !path.exists() {
+                        self.write_status(Status::PathUnknown)?;
+                        continue;
+                    }
+                    if path.is_dir() {
+                        fs::remove_dir(path)?;
+                        self.write_status(Status::Okay)?;
+                    } else {
+                        self.write_status(Status::NotDir)?;
+                    }
                 }
                 Command::Exit => {
                     self.write_status(Status::Disconnected)?;
@@ -149,7 +164,7 @@ impl<S: Read + Write> SoftConnection<S> {
         Ok(())
     }
 
-    /// Return a valid path from root
+    /// Return a valid path from server root
     fn to_server_path(&self, path: &str) -> String {
         // TODO return err
         let root = self.root.clone().unwrap();
@@ -170,6 +185,11 @@ impl<S: Read + Write> SoftConnection<S> {
         } else {
             "/".to_string()
         }
+    }
+
+    /// Return a valid from system root
+    fn to_root_path(&self, server_path: &str) -> String {
+        format!("{}/{}", self.root.clone().unwrap().display(), server_path)
     }
 
     /// List files from root path

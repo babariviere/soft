@@ -46,9 +46,8 @@ impl SoftServer {
         thread::spawn(move || {
             // TODO handle anonymous
             let mut connection = SoftConnection::new(stream, tx, users, false);
-            if connection.run().is_ok() {
-                // TODO log here
-            }
+            // TODO error handling
+            connection.run().unwrap();
         });
         self.connection_handlers.push(rx);
     }

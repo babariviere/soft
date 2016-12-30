@@ -75,7 +75,7 @@ impl<S: Read + Write> SoftConnection<S> {
                         continue;
                     }
                     self.write_status(Status::Okay)?;
-                    let path = self.validate_path(&p);
+                    let path = self.to_server_path(&p);
                     self.send_list_file(&path)?;
                 }
                 Command::Cwd => {
@@ -86,7 +86,14 @@ impl<S: Read + Write> SoftConnection<S> {
                     self.write_status(Status::Okay)?;
                     self.stream.write(format!("{}\n", self.cwd).as_bytes())?;
                 }
-                Command::Cd(p) => unimplemented!(),
+                Command::Cd(p) => {
+                    if self.root.is_none() {
+                        self.write_status(Status::NotConnected)?;
+                        continue;
+                    }
+                    self.cwd = self.to_server_path(&p);
+                    self.write_status(Status::Okay)?;
+                }
                 Command::Exit => {
                     self.write_status(Status::Disconnected)?;
                     break;
@@ -128,7 +135,7 @@ impl<S: Read + Write> SoftConnection<S> {
     }
 
     /// Return a valid path from root
-    fn validate_path(&self, path: &str) -> String {
+    fn to_server_path(&self, path: &str) -> String {
         // TODO return err
         let root = self.root.clone().unwrap();
         let root_str = root.display().to_string();
@@ -150,23 +157,23 @@ impl<S: Read + Write> SoftConnection<S> {
     }
 
     /// List files from root path
-    fn list_files(&self, local_path: &str) -> Result<Vec<String>> {
+    fn list_files(&self, server_path: &str) -> Result<Vec<String>> {
         let root = self.root.clone().unwrap();
-        let root_str = ::common::beautify_path(&format!("{}/{}", root.display(), local_path));
+        let root_str = ::common::beautify_path(&format!("{}/{}", root.display(), server_path));
         let mut list = Vec::new();
         let path = root.join(root_str);
-        let path_name = ::common::beautify_path(local_path);
-        println!("{}", path.display());
+        let path_name = ::common::beautify_path(server_path);
+        let server_path = ::common::beautify_path(server_path);
         if path.is_dir() {
             for entry in path.read_dir()? {
                 let entry = entry?;
                 let file_name = entry.file_name();
                 let file_name = file_name.to_str().unwrap();
+                let mut file_str = format!("{}/{}", server_path, file_name);
                 if entry.path().is_dir() {
-                    list.push(::common::beautify_path(&format!("{}/{}/", local_path, file_name)));
-                } else {
-                    list.push(::common::beautify_path(&format!("{}/{}", local_path, file_name)));
+                    file_str.push('/');
                 }
+                list.push(file_str);
             }
         } else {
             list.push(path_name);

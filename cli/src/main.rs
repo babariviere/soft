@@ -39,6 +39,11 @@ fn main() {
             "cwd" => {
                 println!("{}", client.cwd().unwrap());
             }
+            "cd" => {
+                if splitted.len() == 2 {
+                    client.cd(&splitted[1]).unwrap();
+                }
+            }
             "exit" => {
                 client.exit().unwrap();
                 break;

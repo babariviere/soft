@@ -1,3 +1,3 @@
-# soft: Sync over new file transfert protocol
+# soft: Sync over new file transfer protocol
 
 This is a WIP

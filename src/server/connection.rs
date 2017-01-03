@@ -34,7 +34,7 @@ impl<S: Read + Write> SoftConnection<S> {
         }
     }
 
-    /// TODO Check path
+    /// Run handler for this connection
     pub fn run(&mut self) -> Result<()> {
         loop {
             let command = self.read_command()?;

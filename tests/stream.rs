@@ -37,6 +37,7 @@ fn tcp_stream() {
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
+    client.presence().unwrap();
     client.write_command(Command::Exit).unwrap();
     server_thread.join().unwrap();
 }
@@ -53,10 +54,12 @@ fn file_transfert() {
     });
     let client_stream = net::TcpStream::connect(addr).unwrap();
     let mut client = SoftClient::new(client_stream);
+    client.presence().unwrap();
     client.login("test", "test").unwrap();
     client.put(FILE_NAME, "Cargo.toml").unwrap();
     let data = client.get(FILE_NAME).unwrap();
     assert_eq!(data, FILE_DATA.as_bytes());
+    client.presence().unwrap();
     client.exit().unwrap();
     server_thread.join().unwrap();
 }

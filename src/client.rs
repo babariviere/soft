@@ -89,6 +89,12 @@ impl<S: Read + Write> SoftClient<S> {
         self.check_status()
     }
 
+    /// Check presence of server
+    pub fn presence(&mut self) -> Result<()> {
+        self.write_command(Command::Presence)?;
+        self.check_status()
+    }
+
     /// Send to server an exit command
     pub fn exit(&mut self) -> Result<()> {
         self.write_command(Command::Exit)?;

@@ -21,6 +21,7 @@ fn command_from_str() {
                Command::Rm("path".into()));
     assert_eq!(Command::try_from("RMDIR path").unwrap(),
                Command::Rmdir("path".into()));
+    assert_eq!(Command::try_from("PRESENCE").unwrap(), Command::Presence);
     assert_eq!(Command::try_from("EXIT").unwrap(), Command::Exit);
     assert!(Command::try_from("LOGIN BLA").is_err());
     assert!(Command::try_from("GET hehe hehe").is_err());
@@ -45,6 +46,7 @@ fn command_to_str() {
     assert_eq!(Command::Mkdir("path".into()).to_string(), "MKDIR path");
     assert_eq!(Command::Rm("path".into()).to_string(), "RM path");
     assert_eq!(Command::Rmdir("path".into()).to_string(), "RMDIR path");
+    assert_eq!(Command::Presence.to_string(), "PRESENCE");
     assert_eq!(Command::Exit.to_string(), "EXIT");
 }
 

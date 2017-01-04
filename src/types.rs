@@ -12,6 +12,7 @@ pub enum Command {
     Mkdir(String),
     Rm(String),
     Rmdir(String),
+    Presence,
     Exit,
 }
 
@@ -69,6 +70,7 @@ impl Command {
                 }
                 Ok(Command::Rmdir(splitted[1].clone()))
             }
+            "PRESENCE" => Ok(Command::Presence),
             "EXIT" => Ok(Command::Exit),
             _ => bail!(ErrorKind::InvalidCommand(s)),
         }
@@ -111,6 +113,7 @@ impl fmt::Display for Command {
             Command::Mkdir(ref p) => write!(f, "MKDIR {}", p),
             Command::Rm(ref p) => write!(f, "RM {}", p),
             Command::Rmdir(ref p) => write!(f, "RMDIR {}", p),
+            Command::Presence => write!(f, "PRESENCE"),
             Command::Exit => write!(f, "EXIT"),
         }
     }

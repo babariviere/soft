@@ -40,6 +40,7 @@ impl<S: Read + Write> SoftConnection<S> {
             let command = self.read_command()?;
             match command {
                 Command::Login(_, _) |
+                Command::Presence |
                 Command::Exit => {}
                 _ => {
                     if self.root.is_none() {
@@ -123,6 +124,9 @@ impl<S: Read + Write> SoftConnection<S> {
                     } else {
                         self.write_status(Status::NotDir)?;
                     }
+                }
+                Command::Presence => {
+                    self.write_status(Status::Okay)?;
                 }
                 Command::Exit => {
                     self.write_status(Status::Disconnected)?;

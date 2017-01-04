@@ -84,8 +84,8 @@ impl<S: Read + Write> SoftClient<S> {
     }
 
     /// Remove a directory
-    pub fn rmdir(&mut self, path: &str) -> Result<()> {
-        self.write_command(Command::Rmdir(path.into()))?;
+    pub fn rmdir(&mut self, path: &str, recursive: bool) -> Result<()> {
+        self.write_command(Command::Rmdir(path.into(), recursive))?;
         self.check_status()
     }
 

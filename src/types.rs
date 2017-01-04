@@ -11,7 +11,7 @@ pub enum Command {
     Cd(String),
     Mkdir(String),
     Rm(String),
-    Rmdir(String),
+    Rmdir(String, bool),
     Presence,
     Exit,
 }
@@ -65,10 +65,11 @@ impl Command {
                 Ok(Command::Rm(splitted[1].clone()))
             }
             "RMDIR" => {
-                if splitted.len() != 2 {
+                if splitted.len() != 3 {
                     bail!(ErrorKind::InvalidCommand(s));
                 }
-                Ok(Command::Rmdir(splitted[1].clone()))
+                Ok(Command::Rmdir(splitted[1].clone(),
+                                  splitted[2].clone().parse::<bool>().unwrap()))
             }
             "PRESENCE" => Ok(Command::Presence),
             "EXIT" => Ok(Command::Exit),
@@ -94,7 +95,7 @@ impl Command {
             Command::List(s) |
             Command::Cd(s) |
             Command::Rm(s) |
-            Command::Rmdir(s) |
+            Command::Rmdir(s, _) |
             Command::Mkdir(s) => s,
             c => panic!("Command \'{}\' doesn't contain path", c),
         }
@@ -112,7 +113,7 @@ impl fmt::Display for Command {
             Command::Cd(ref p) => write!(f, "CD {}", p),
             Command::Mkdir(ref p) => write!(f, "MKDIR {}", p),
             Command::Rm(ref p) => write!(f, "RM {}", p),
-            Command::Rmdir(ref p) => write!(f, "RMDIR {}", p),
+            Command::Rmdir(ref p, ref r) => write!(f, "RMDIR {} {}", p, r),
             Command::Presence => write!(f, "PRESENCE"),
             Command::Exit => write!(f, "EXIT"),
         }

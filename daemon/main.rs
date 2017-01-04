@@ -3,7 +3,7 @@ extern crate soft;
 use soft::server::SoftServer;
 use std::net::TcpListener;
 
-fn main() {
+pub fn main() {
     // TODO cli parsing and configuration
     let mut server = SoftServer::new("soft-daemon", Some(8)).unwrap();
     server.get_users().add_user("soft", "soft");

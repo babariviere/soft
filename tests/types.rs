@@ -19,8 +19,8 @@ fn command_from_str() {
                Command::Mkdir("path".into()));
     assert_eq!(Command::try_from("RM path").unwrap(),
                Command::Rm("path".into()));
-    assert_eq!(Command::try_from("RMDIR path").unwrap(),
-               Command::Rmdir("path".into()));
+    assert_eq!(Command::try_from("RMDIR path true").unwrap(),
+               Command::Rmdir("path".into(), true));
     assert_eq!(Command::try_from("PRESENCE").unwrap(), Command::Presence);
     assert_eq!(Command::try_from("EXIT").unwrap(), Command::Exit);
     assert!(Command::try_from("LOGIN BLA").is_err());
@@ -45,7 +45,8 @@ fn command_to_str() {
     assert_eq!(Command::Cd("path".into()).to_string(), "CD path");
     assert_eq!(Command::Mkdir("path".into()).to_string(), "MKDIR path");
     assert_eq!(Command::Rm("path".into()).to_string(), "RM path");
-    assert_eq!(Command::Rmdir("path".into()).to_string(), "RMDIR path");
+    assert_eq!(Command::Rmdir("path".into(), true).to_string(),
+               "RMDIR path true");
     assert_eq!(Command::Presence.to_string(), "PRESENCE");
     assert_eq!(Command::Exit.to_string(), "EXIT");
 }
@@ -70,7 +71,7 @@ fn command_unwrap_path() {
     assert_eq!(Command::Cd("path".into()).unwrap_path(), "path");
     assert_eq!(Command::Mkdir("path".into()).unwrap_path(), "path");
     assert_eq!(Command::Rm("path".into()).unwrap_path(), "path");
-    assert_eq!(Command::Rmdir("path".into()).unwrap_path(), "path");
+    assert_eq!(Command::Rmdir("path".into(), false).unwrap_path(), "path");
 }
 
 #[test]

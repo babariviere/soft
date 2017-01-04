@@ -111,7 +111,7 @@ impl<S: Read + Write> SoftConnection<S> {
                         self.write_status(Status::NotFile)?;
                     }
                 }
-                Command::Rmdir(p) => {
+                Command::Rmdir(p, recursive) => {
                     let path_str = self.to_root_path(&p);
                     let path = PathBuf::from(path_str);
                     if !path.exists() {
@@ -119,7 +119,11 @@ impl<S: Read + Write> SoftConnection<S> {
                         continue;
                     }
                     if path.is_dir() {
-                        fs::remove_dir(path)?;
+                        if recursive {
+                            fs::remove_dir_all(path)?;
+                        } else {
+                            fs::remove_dir(path)?;
+                        }
                         self.write_status(Status::Okay)?;
                     } else {
                         self.write_status(Status::NotDir)?;

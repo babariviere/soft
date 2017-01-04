@@ -1,19 +1,19 @@
 extern crate soft;
 
 use soft::client::SoftClient;
-use std::io::{BufRead, Read, Write, stdin};
+use std::io::{BufRead, stdin};
 use std::net::TcpStream;
 
-fn main() {
+pub fn main() {
     let stream = TcpStream::connect(("127.0.0.1", soft::DEFAULT_PORT)).unwrap();
     let mut client = SoftClient::new(stream);
     loop {
         let readed = readline();
-        let mut splitted = readed.split_whitespace().map(|s| s.to_owned()).collect::<Vec<String>>();
+        let splitted = readed.split_whitespace().map(|s| s.to_owned()).collect::<Vec<String>>();
         match splitted[0].as_str() {
             "login" => {
                 if splitted.len() == 3 {
-                    client.login(&splitted[1], &splitted[2]);
+                    client.login(&splitted[1], &splitted[2]).unwrap();
                 }
             }
             "get" => {
@@ -64,7 +64,7 @@ fn main() {
             }
             "rmdir" => {
                 if splitted.len() == 2 {
-                    client.rmdir(&splitted[1]).unwrap();
+                    client.rmdir(&splitted[1], true).unwrap();
                 }
             }
             "exit" => {

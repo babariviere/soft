@@ -19,7 +19,7 @@ fn file_stream() {
         .open(".file_stream")
         .unwrap();
     let client_stream = fs::OpenOptions::new().read(true).write(true).open(".file_stream").unwrap();
-    let mut server = SoftServer::new("test_file_stream", None).unwrap();
+    let mut server = SoftServer::new("test_file_stream", None, true).unwrap();
     let mut client = SoftClient::new(client_stream);
     server.new_connection(server_stream);
     client.write_command(Command::Exit).unwrap();
@@ -28,7 +28,7 @@ fn file_stream() {
 
 #[test]
 fn tcp_stream() {
-    let mut server = SoftServer::new("test_tcp_stream", None).unwrap();
+    let mut server = SoftServer::new("test_tcp_stream", None, true).unwrap();
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
@@ -44,7 +44,7 @@ fn tcp_stream() {
 
 #[test]
 fn file_transfert() {
-    let mut server = SoftServer::new("test_file_transfert", None).unwrap();
+    let mut server = SoftServer::new("test_file_transfert", None, true).unwrap();
     server.get_users().add_user("test", "test");
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 1)).unwrap();
     let addr = server_stream.local_addr().unwrap();
@@ -86,7 +86,7 @@ fn file_transfert() {
 
 #[test]
 fn list_files() {
-    let mut server = SoftServer::new("test_list_files", None).unwrap();
+    let mut server = SoftServer::new("test_list_files", None, true).unwrap();
     server.get_users().add_user("test", "test");
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 3)).unwrap();
     let addr = server_stream.local_addr().unwrap();
@@ -104,7 +104,7 @@ fn list_files() {
 
 #[test]
 fn drop_exit() {
-    let mut server = SoftServer::new("test_drop_exit", None).unwrap();
+    let mut server = SoftServer::new("test_drop_exit", None, true).unwrap();
     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 4)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {

@@ -16,11 +16,15 @@ pub struct SoftServer {
     connection_handlers: Vec<mpsc::Receiver<u8>>,
     users: Arc<Users>,
     max_threads: usize,
+    allow_anonymous: bool,
 }
 
 impl SoftServer {
     /// Initialize a new server from stream
-    pub fn new(name: &str, max_threads: Option<usize>) -> Result<SoftServer> {
+    pub fn new(name: &str,
+               max_threads: Option<usize>,
+               allow_anonymous: bool)
+               -> Result<SoftServer> {
         let mut max_threads = max_threads.unwrap_or(8);
         if max_threads < 1 {
             max_threads = 1;
@@ -32,6 +36,7 @@ impl SoftServer {
             connection_handlers: Vec::new(),
             users: Arc::new(Users::load(path)?),
             max_threads: max_threads,
+            allow_anonymous: allow_anonymous,
         })
     }
 
@@ -43,9 +48,9 @@ impl SoftServer {
         }
         let (tx, rx) = mpsc::channel();
         let users = self.users.clone();
+        let allow_anonymous = self.allow_anonymous.clone();
         thread::spawn(move || {
-            // TODO handle anonymous
-            let mut connection = SoftConnection::new(stream, tx, users, false);
+            let mut connection = SoftConnection::new(stream, tx, users, allow_anonymous);
             // TODO error handling
             connection.run().unwrap();
         });

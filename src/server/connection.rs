@@ -51,7 +51,8 @@ impl<S: Read + Write> SoftConnection<S> {
             }
             match command {
                 Command::Login(u, p) => {
-                    if !self.users.is_valid(&u, &p) {
+                    if !(self.allow_anonymous && &u == "anonymous") &&
+                       !self.users.is_valid(&u, &p) {
                         self.write_status(Status::WrongLogin)?;
                         continue;
                     }

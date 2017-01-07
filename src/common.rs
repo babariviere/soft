@@ -2,6 +2,7 @@ use error::*;
 use std::fs;
 use std::io::{Read, Write};
 use std::mem;
+use std::path::Path;
 
 /// Receive file from stream
 pub fn recv_file<R: Read>(stream: &mut R) -> Result<Vec<u8>> {
@@ -78,7 +79,8 @@ pub fn beautify_path(path: &str) -> String {
 }
 
 /// Return an absolute path of string
-pub fn canonicalize(path: &str) -> String {
+pub fn canonicalize<P: AsRef<Path>>(path: P) -> String {
+    let path = path.as_ref().to_str().unwrap_or(".");
     let path = if path.starts_with('/') {
         path.to_owned()
     } else {

@@ -9,6 +9,8 @@ error_chain!{
     foreign_links {
         Io(::std::io::Error);
         AppDirs(::app_dirs::AppDirsError);
+        SystemTime(::std::time::SystemTimeError);
+        Int(::std::num::ParseIntError);
     }
 
     errors {

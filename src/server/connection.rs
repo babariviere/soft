@@ -67,7 +67,6 @@ impl<S: Read + Write> SoftConnection<S> {
                     self.send_file(&p)?;
                 }
                 Command::Put(p) => {
-                    // FIXME new file
                     self.write_status(Status::Okay)?;
                     let path_str = format!("{}/{}",
                                            self.root.clone().unwrap().display(),

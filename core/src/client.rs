@@ -1,7 +1,17 @@
+//! Soft client to talk with soft server
 use error::*;
 use std::io::{Read, Write};
 use types::*;
 
+/// Soft client
+///
+/// ```no_run
+/// use soft_core::client::SoftClient;
+/// use std::net::TcpStream;
+///
+/// let stream = TcpStream::connect("127.0.0.1:9045").unwrap();
+/// let mut client = SoftClient::new(stream);
+/// ```
 pub struct SoftClient<S: Read + Write> {
     stream: S,
     exited: bool,
@@ -118,6 +128,7 @@ impl<S: Read + Write> SoftClient<S> {
     // Low level functions
 
     /// Send a command to server
+    ///
     /// Warning: this is a low level function
     pub fn write_command(&mut self, command: Command) -> Result<()> {
         self.stream.write(format!("{}\n", command).as_bytes())?;
@@ -125,6 +136,7 @@ impl<S: Read + Write> SoftClient<S> {
     }
 
     /// Receive status from server
+    ///
     /// Warning: this is a low level function
     pub fn read_status(&mut self) -> Result<Status> {
         let mut buf = [0];
@@ -133,18 +145,21 @@ impl<S: Read + Write> SoftClient<S> {
     }
 
     /// Receive file from soft server
+    ///
     /// Warning: this is a low level function
     pub fn recv_file(&mut self) -> Result<Vec<u8>> {
         ::common::recv_file(&mut self.stream)
     }
 
     /// Receive list of file from soft server
+    ///
     /// Warning: this is a low level function
     pub fn recv_list_file(&mut self) -> Result<Vec<String>> {
         ::common::recv_list_file(&mut self.stream)
     }
 
     /// Send file to soft server
+    ///
     /// Warning: this is a low level function
     pub fn send_file(&mut self, path: &str) -> Result<()> {
         ::common::send_file(&mut self.stream, path)

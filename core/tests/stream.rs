@@ -1,8 +1,8 @@
-extern crate soft;
+extern crate soft_core;
 
-use soft::client::SoftClient;
-use soft::server::SoftServer;
-use soft::types::*;
+use soft_core::client::SoftClient;
+use soft_core::server::SoftServer;
+use soft_core::types::*;
 use std::fs;
 use std::net;
 use std::thread;
@@ -29,7 +29,7 @@ fn file_stream() {
 #[test]
 fn tcp_stream() {
     let mut server = SoftServer::new("test_tcp_stream", None, true).unwrap();
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT)).unwrap();
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft_core::DEFAULT_PORT)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
@@ -46,7 +46,7 @@ fn tcp_stream() {
 fn file_transfert() {
     let mut server = SoftServer::new("test_file_transfert", None, true).unwrap();
     server.get_users().add_user("test", "test");
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 1)).unwrap();
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft_core::DEFAULT_PORT + 1)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
@@ -65,7 +65,7 @@ fn file_transfert() {
 }
 // #[test]
 // fn login() {
-//     let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 2)).unwrap();
+//     let server_stream = net::TcpListener::bind(("0.0.0.0", soft_core::DEFAULT_PORT + 2)).unwrap();
 //     let addr = server_stream.local_addr().unwrap();
 //     let server_thread = thread::spawn(move || {
 //         let (client, _) = server_stream.accept().unwrap();
@@ -88,7 +88,7 @@ fn file_transfert() {
 fn list_files() {
     let mut server = SoftServer::new("test_list_files", None, true).unwrap();
     server.get_users().add_user("test", "test");
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 3)).unwrap();
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft_core::DEFAULT_PORT + 3)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();
@@ -105,7 +105,7 @@ fn list_files() {
 #[test]
 fn drop_exit() {
     let mut server = SoftServer::new("test_drop_exit", None, true).unwrap();
-    let server_stream = net::TcpListener::bind(("0.0.0.0", soft::DEFAULT_PORT + 4)).unwrap();
+    let server_stream = net::TcpListener::bind(("0.0.0.0", soft_core::DEFAULT_PORT + 4)).unwrap();
     let addr = server_stream.local_addr().unwrap();
     let server_thread = thread::spawn(move || {
         let (client, _) = server_stream.accept().unwrap();

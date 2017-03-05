@@ -1,3 +1,4 @@
+//! Sync module to sync file between server and client
 use APP_INFO;
 use app_dirs::{AppDataType, app_dir};
 use error::*;
@@ -8,8 +9,10 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+/// A sync cache
 pub type SyncCache = (String, u64);
 
+/// Sync cacher to cache all files
 pub struct SyncCacher {
     cacher_path: PathBuf,
 }
@@ -39,6 +42,7 @@ impl SyncCacher {
     }
 }
 
+/// Hash a path
 fn hash_path<P: AsRef<Path>>(path: P) -> String {
     let path_ref = path.as_ref();
     let path_str = ::common::canonicalize(&path_ref);

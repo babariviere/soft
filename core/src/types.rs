@@ -1,22 +1,36 @@
+//! Contains all types used by soft
 use error::*;
 use std::fmt;
 
+/// All soft commands
 #[derive(Clone, Debug, PartialEq)]
 pub enum Command {
+    /// Login to server
     Login(String, String),
+    /// Get a file
     Get(String),
+    /// Put a file
     Put(String),
+    /// List directory
     List(String),
+    /// Get current working dir
     Cwd,
+    /// Change directory
     Cd(String),
+    /// Make directory
     Mkdir(String),
+    /// Remove file
     Rm(String),
+    /// Remove directory
     Rmdir(String, bool),
+    /// Presence check
     Presence,
+    /// Exit
     Exit,
 }
 
 impl Command {
+    /// Try converting string to command
     pub fn try_from<S: AsRef<str>>(s: S) -> Result<Command> {
         let s = s.as_ref().to_string();
         let splitted = s.split_whitespace().map(|s| s.to_owned()).collect::<Vec<String>>();
@@ -120,19 +134,30 @@ impl fmt::Display for Command {
     }
 }
 
+/// Status of command
 pub enum Status {
+    /// Connected to server
     Connected = 1,
+    /// Disconnected from server
     Disconnected = 2,
+    /// Wrong login credential
     WrongLogin = 3,
+    /// Not connected to server
     NotConnected = 4,
+    /// Okay
     Okay = 5,
+    /// Not a file
     NotFile = 6,
+    /// Not a directory
     NotDir = 7,
+    /// Unknown path
     PathUnknown = 8,
+    /// Unknown error
     UnkownError = 255,
 }
 
 impl Status {
+    /// Check if status is positive
     pub fn is_positive(&self) -> bool {
         match *self {
             Status::Connected | Status::Disconnected | Status::Okay => true,
@@ -140,6 +165,7 @@ impl Status {
         }
     }
 
+    /// Check if status is negative
     pub fn is_negative(&self) -> bool {
         !self.is_positive()
     }

@@ -1,3 +1,4 @@
+//! Soft server to handle soft client
 mod connection;
 pub mod users;
 
@@ -12,6 +13,12 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+/// Soft server
+///
+/// ```
+/// use soft_core::server::SoftServer;
+///
+/// let mut server = SoftServer::new("server", None, true);
 pub struct SoftServer {
     connection_handlers: Vec<mpsc::Receiver<u8>>,
     users: Arc<Users>,
@@ -57,6 +64,7 @@ impl SoftServer {
         self.connection_handlers.push(rx);
     }
 
+    /// Get all users
     pub fn get_users(&self) -> Arc<Users> {
         self.users.clone()
     }

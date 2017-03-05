@@ -1,3 +1,5 @@
+//! Error module with all error used by soft
+#![allow(missing_docs)]
 
 error_chain!{
     types {

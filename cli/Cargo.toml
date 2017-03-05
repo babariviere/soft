@@ -1,0 +1,7 @@
+[package]
+name = "soft"
+version = "0.1.0"
+authors = ["notkild <notkild@gmail.com>"]
+
+[dependencies]
+soft-core = {path="../core"}

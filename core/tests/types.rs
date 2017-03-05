@@ -1,6 +1,6 @@
-extern crate soft;
+extern crate soft_core;
 
-use soft::types::Command;
+use soft_core::types::Command;
 
 #[test]
 fn command_from_str() {

@@ -1,3 +1,4 @@
+//! Common module contains all function needed by server and client
 use error::*;
 use std::fs;
 use std::io::{Read, Write};

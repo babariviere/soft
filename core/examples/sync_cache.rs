@@ -1,6 +1,6 @@
-extern crate soft;
+extern crate soft_core;
 
-use soft::sync::SyncCacher;
+use soft_core::sync::SyncCacher;
 
 fn main() {
     let cacher = SyncCacher::new("sync_cacher_example").unwrap();

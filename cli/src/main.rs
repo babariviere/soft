@@ -1,11 +1,11 @@
-extern crate soft;
+extern crate soft_core;
 
-use soft::client::SoftClient;
+use soft_core::client::SoftClient;
 use std::io::{BufRead, stdin};
 use std::net::TcpStream;
 
 pub fn main() {
-    let stream = TcpStream::connect(("127.0.0.1", soft::DEFAULT_PORT)).unwrap();
+    let stream = TcpStream::connect(("127.0.0.1", soft_core::DEFAULT_PORT)).unwrap();
     let mut client = SoftClient::new(stream);
     loop {
         let readed = readline();
